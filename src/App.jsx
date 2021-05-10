@@ -1,14 +1,18 @@
 import React, { Component } from 'react'
+import {Route,Switch,Redirect} from 'react-router-dom'
 import './App.scss'
 
 import SearchBar from './SearchBar'
-import NavBar from './NavBar'
-import ZhiFuArea from './ZhiFuArea'
-import DaiFuArea from './DaiFuArea'
+import NavBar from './navBar/NavBar'
+import Main from './main/Main'
+import White from './white/White'
+import SetTool from './setTool/SetTool'
+import AddZhiFu from './addZhiFu/AddZhiFu'
+import AddDaiFu from './addDaiFu/AddDaiFu'
 
 export default class App extends Component {
 
-    state = {
+    initState={
         payInfo: {
             paymentName: "",
             logName: "",
@@ -26,6 +30,8 @@ export default class App extends Component {
         }
 
     }
+
+    state = {...this.initState}
 
     //測試資料
     tempstate = {
@@ -48,6 +54,8 @@ export default class App extends Component {
         }
 
     }
+
+    
 
 
     search = () => {
@@ -88,21 +96,46 @@ export default class App extends Component {
 
     }
 
+    clear =()=>{
+        this.setState(this.initState)
+    }
+
+    queryWhite = ()=>{
+        console.log("查詢白名單")
+    }
+
+    addWhite = ()=>{
+        console.log("新增白名單")
+    }
+
+    deleteWhite = ()=>{
+        console.log("刪除白名單")
+    }
+
     render() {
 
         const { payInfo, withdrawInfo } = this.state
-
         return (
             <div>
                 <div className="container outbox">
                     <SearchBar search={this.search} payInfo={payInfo} />
                     <div className="row">
                         {/*功能列表*/}
-                        <NavBar />
+                        <NavBar/>
                         <div className="col-9">
-                            <ZhiFuArea update={this.update} terminate={this.terminate} turnOn={this.turnOn} payInfo={payInfo} />
-                            <DaiFuArea update={this.update} terminate={this.terminate} turnOn={this.turnOn} withdrawInfo={withdrawInfo} />
+                            <Switch>      
+                                <Route path="/main" render={props=> <Main update={this.update} terminate={this.terminate} turnOn={this.turnOn} clear={this.clear} payInfo={payInfo}  withdrawInfo={withdrawInfo}/> }/>
+                                <Route path="/white" render={props=> <White queryWhite={this.queryWhite} addWhite={this.addWhite} deleteWhite={this.deleteWhite} />}/>
+                                <Route path="/settool" exact component={SetTool}/>
+                                <Route path="/addZhiFu" exact component={AddZhiFu}/>
+                                <Route path="/addDaiFu" exact component={AddDaiFu}/>
+                                <Redirect to="/main"/>
+                            </Switch>
+                            
                         </div>
+
+                        
+                        
                     </div>
                 </div>
             </div>
