@@ -14,6 +14,7 @@ class AddDaiFu extends Component {
 
     defaultBank="中信銀行-ROC,建設銀行-ICBC,郵政儲蓄-PSBC,中國銀行-ROC,工商銀行-CBC"
 
+    //初始資料，清空時可用
     initState={
         payName:"",
         logName:"",
@@ -28,9 +29,10 @@ class AddDaiFu extends Component {
 
     }
 
+    //組件狀態
     state={...this.initState}
 
-    
+     
 
     hdInput =(name,e)=>{
         const val =e.target.value
@@ -41,6 +43,7 @@ class AddDaiFu extends Component {
         
     }
 
+    //解析方法
     hdParse=(parseState)=>{
         this.setState({...parseState})
     }
@@ -63,9 +66,6 @@ class AddDaiFu extends Component {
         
     }
 
-    getParseData=()=>{
-
-    }
 
     render() {
         const {payName,logName,paymenyUrl,queryUrl,keyRules,freeBank,banks,white,isClear} =this.state
@@ -86,7 +86,7 @@ class AddDaiFu extends Component {
 
                         <div className="row my-2">
                             <ClearBtn tag="清空" clear={this.clear}/>
-                            <UpdateBtn tag="新增代付" />
+                            <UpdateBtn tag="新增代付" update={this.props.addDaiFuToList} result={payName+" "+keyRules}/>
                         </div>
                     </div>
                 </div>

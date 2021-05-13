@@ -1,5 +1,6 @@
-import React, { Component } from 'react'
-import {Route,Switch,Redirect} from 'react-router-dom'
+import React, { Component, createRef } from 'react'
+import { Route, Switch, Redirect } from 'react-router-dom'
+import {Modal} from 'bootstrap'
 import './App.scss'
 
 import SearchBar from './SearchBar'
@@ -9,10 +10,13 @@ import White from './white/White'
 import SetTool from './setTool/SetTool'
 import AddZhiFu from './addZhiFu/AddZhiFu'
 import AddDaiFu from './addDaiFu/AddDaiFu'
+import AddList from './addList/AddList'
+import MsgModal from './MsgModal'
 
 export default class App extends Component {
 
-    initState={
+    //初始資料，清空資料時用
+    initState = {
         payInfo: {
             paymentName: "",
             logName: "",
@@ -27,11 +31,16 @@ export default class App extends Component {
             queryUrl: "",
             keyRules: "",
             isEnable: true
-        }
+        },
+
+        addZhiFu: "",
+        addDaiFu: "",
+        modalMag:"",
 
     }
 
-    state = {...this.initState}
+    //組件狀態管理
+    state = { ...this.initState }
 
     //測試資料
     tempstate = {
@@ -40,9 +49,9 @@ export default class App extends Component {
             logName: "91ZhiFu",
             paymentUrl: "http://www.google.com",
             payMethod: [
-                {method:103,type:1000},
-                {method:103,type:3000},
-                {method:104,type:1000}
+                { method: 103, type: 1000 },
+                { method: 103, type: 3000 },
+                { method: 104, type: 1000 }
             ],
             remark: "支持終端號綁定通道邊碼"
         },
@@ -55,15 +64,23 @@ export default class App extends Component {
 
     }
 
+    //訊息框節點
+    modalref=createRef()
+    modal=null
+
     
-
-
     search = () => {
-        this.setState({ payInfo: this.tempstate.payInfo })
+        this.setState({ payInfo: this.tempstate.payInfo,modalMag:"查無資料" },()=>{
+            this.modal.show()
+        })
+        
         console.log("search")
     }
 
     update = () => {
+        this.setState({ modalMag:"修改成功" },()=>{
+            this.modal.show()
+        })
         console.log("update")
     }
 
@@ -71,10 +88,11 @@ export default class App extends Component {
         const { payInfo, withdrawInfo } = this.state
         withdrawInfo.isEnable = false
         payInfo.isEnable = false
-        this.setState({ payInfo, withdrawInfo },
+        this.setState({ payInfo, withdrawInfo,modalMag:"停用成功" },
             () => {
-                console.log(this.state.payInfo.isEnable)
+                this.modal.show()
             })
+        
         console.log("停用")
     }
 
@@ -82,60 +100,99 @@ export default class App extends Component {
         const { payInfo, withdrawInfo } = this.state
         if (isZhiFu) {
             payInfo.isEnable = true
-            this.setState({ payInfo: payInfo },
+            this.setState({ payInfo: payInfo,modalMag:"開啟成功" },
                 () => {
-                    console.log("支付啟用",this.state.payInfo.isEnable)
+                    this.modal.show()
                 })
         } else {
             withdrawInfo.isEnable = true
-            this.setState({ withdrawInfo: withdrawInfo },
+            this.setState({ withdrawInfo: withdrawInfo,modalMag:"開啟成功" },
                 () => {
-                    console.log("代付啟用",this.state.withdrawInfo.isEnable)
+                    this.modal.show()
                 })
         }
 
     }
 
-    clear =()=>{
+    //清空資料
+    clear = () => {
         this.setState(this.initState)
     }
 
-    queryWhite = ()=>{
+    queryWhite = () => {
         console.log("查詢白名單")
     }
 
-    addWhite = ()=>{
+    addWhite = () => {
+        this.setState({ modalMag:"新增白名單成功" },
+        () => {
+            this.modal.show()
+        })
         console.log("新增白名單")
     }
 
-    deleteWhite = ()=>{
+    deleteWhite = () => {
+        this.setState({ modalMag:"刪除白名單成功" },
+        () => {
+            this.modal.show()
+        })
         console.log("刪除白名單")
+    }
+
+    //新增到每日新增框
+    addZhFuToList = (addresult) => {
+        this.setState({ addZhiFu: addresult,modalMag:"新增成功" },()=>{
+            this.modal.show()
+        })
+    }
+
+    addDaiFuToList = (addresult) => {
+        this.setState({ addDaiFu: addresult,modalMag:"新增成功" },()=>{
+            this.modal.show()
+        })
+    }
+
+
+    //生命週期，創建modal 節點的ref
+    componentDidMount(){
+        //訊息框
+        this.modal=new Modal(this.modalref.current,{
+            //點擊背景不會讓訊息框消失
+            backdrop:"static",     
+        })
     }
 
     render() {
 
-        const { payInfo, withdrawInfo } = this.state
+        const { payInfo, withdrawInfo, addZhiFu, addDaiFu,modalMag } = this.state
         return (
             <div>
                 <div className="container outbox">
                     <SearchBar search={this.search} payInfo={payInfo} />
                     <div className="row">
                         {/*功能列表*/}
-                        <NavBar/>
+                        <NavBar />
                         <div className="col-9">
-                            <Switch>      
-                                <Route path="/main" render={props=> <Main update={this.update} terminate={this.terminate} turnOn={this.turnOn} clear={this.clear} payInfo={payInfo}  withdrawInfo={withdrawInfo}/> }/>
-                                <Route path="/white" render={props=> <White queryWhite={this.queryWhite} addWhite={this.addWhite} deleteWhite={this.deleteWhite} />}/>
-                                <Route path="/settool" exact component={SetTool}/>
-                                <Route path="/addZhiFu" exact component={AddZhiFu}/>
-                                <Route path="/addDaiFu" exact component={AddDaiFu}/>
-                                <Redirect to="/main"/>
+                            <Switch>
+                                <Route path="/main" render={props => <Main update={this.update} terminate={this.terminate} turnOn={this.turnOn} clear={this.clear} payInfo={payInfo} withdrawInfo={withdrawInfo} />} />
+                                <Route path="/white" render={props => <White queryWhite={this.queryWhite} addWhite={this.addWhite} deleteWhite={this.deleteWhite} />} />
+                                <Route path="/settool" exact component={SetTool} />
+                                <Route path="/addZhiFu" render={props => <AddZhiFu addZhFuToList={this.addZhFuToList} />} />
+                                <Route path="/addDaiFu" render={props => <AddDaiFu addDaiFuToList={this.addDaiFuToList} />} />
+                                <Redirect to="/main" />
                             </Switch>
-                            
+
+
+                            <AddList addZhiFu={addZhiFu} addDaiFu={addDaiFu} />
+
                         </div>
 
-                        
-                        
+                        {/*modal */}
+                        <MsgModal nodeName={this.modalref} showMsg={modalMag}/>
+
+
+
+
                     </div>
                 </div>
             </div>

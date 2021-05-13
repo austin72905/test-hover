@@ -5,48 +5,16 @@ import TextBox from '../components//TextBox'
 import ClearBtn from '../components//ClearBtn'
 import UpdateBtn from '../components/UpdateBtn'
 import WhiteArea from '../addDaiFu/WhiteArea'
-import { PAYCODE, TYPE } from '../payTypeCode'
+import { zhiFuType,terminal,preparePayMethod } from '../payTypeCode'
 
 
 class AddZhiFu extends Component {
-
-    terminal = [
-        { name: "掃碼", code: TYPE.QR },
-        { name: "H5", code: TYPE.H5 },
-        { name: "WAP", code: TYPE.WAP },
-        { name: "條形碼", code: TYPE.BARCODE },
-        { name: "銀聯快捷", code: TYPE.銀聯快捷 }
-    ]
-
-    zhiFuType = [
-        { name: "支付寶", code: PAYCODE.ALIPAY },
-        { name: "網銀", code: PAYCODE.FASTPAY },
-        { name: "微信", code: PAYCODE.WEIXIN },
-        { name: "雲閃付", code: PAYCODE.CLOUDPAY },
-        { name: "銀聯", code: PAYCODE.UNIONPAY },
-        { name: "QQ", code: PAYCODE.QQPAY }
-
-    ]
-
-    preparePayMethod =()=> {
-        const payMenu = []
-        this.zhiFuType.forEach(m => {
-            this.terminal.forEach(t => {
-                payMenu.push({
-                    payType: { method: m.code, type: t.code },
-                    checked: false
-                })
-            })
-        })
-        console.log(payMenu)
-        return payMenu;
-    }
 
     initState = {
         payName: "",
         logName: "",
         paymenyUrl: "",
-        payMethod: this.preparePayMethod(),
+        payMethod: preparePayMethod(),
         remark: "",
         white: "",
 
@@ -54,13 +22,56 @@ class AddZhiFu extends Component {
 
     state = { ...this.initState }
 
+
+    parsePayMethod = (payMethod)=>{
+        //console.log("payMethod",payMethod)
+
+        let payMethodStr=""
+
+        //篩選出checked 的payMenu
+        payMethod=payMethod.filter(el=>el.checked)
+
+        let payList=[{pay:"",ter:""}]
+
+        payMethod.forEach(el=>{
+            const pay = zhiFuType.find(m=>m.code===el.payType.method)
+            const ter = terminal.find(t=>t.code===el.payType.type)
+
+            if(!payList.find(pt=>pt.pay ===pay.name)){
+                payList.push({pay:pay.name,ter:ter.name})
+            }else{
+                payList=payList.map(nl=>{
+                    if(nl.pay===pay.name){
+                        nl.ter+=","+ter.name                
+                    }
+                    return nl
+                })
+                
+            }
+
+        })
+
+        //最終要顯示的文字
+        payList.forEach(el=>{
+            if(el.pay!==""){
+                payMethodStr+=el.pay+":"+el.ter+" "
+            }
+        })
+
+
+        return payMethodStr
+        
+
+        
+    }
+
     clear = () => {
-        this.setState({ ...this.initState })
+        const initMenu =preparePayMethod();
+        this.setState({...this.initState,payMethod:initMenu})
     }
 
     hdInput = (name, e) => {
         const val = e.target.value
-
         this.setState({ [name]: val }, () => {
             console.log("state", this.state)
         })
@@ -71,7 +82,6 @@ class AddZhiFu extends Component {
     handleCheck=(e) =>{
         
         const val = e.target.value.split(' ')
-        console.log("val",val)
         const method = Number(val[0])
         const type = Number(val[1])
         const newPayMethod=this.state.payMethod.map(el=>{
@@ -80,7 +90,6 @@ class AddZhiFu extends Component {
             }
             return el
         })
-        console.log(newPayMethod)
         this.setState({payMethod:newPayMethod})
         
     }
@@ -90,6 +99,7 @@ class AddZhiFu extends Component {
     render() {
 
         const { payName, logName, paymenyUrl, remark,payMethod } = this.state
+        const addpaystr=payName+" "+this.parsePayMethod(payMethod)
 
         return (
             <div className="addZhiFu">
@@ -106,25 +116,30 @@ class AddZhiFu extends Component {
                 <div className="row my-2">
                     <TextBox tag="備註 " name="remark" val={remark} hdInput={this.hdInput} />
                 </div>
-                {this.zhiFuType.map(m => (
-                    <div className="row gx-1 my-2">
-                        {this.terminal.map(t => (
-                            <div className="col-2">
+                {zhiFuType.map(m => (
+                    <div className="row gx-1 my-2" key={m.code}>
+                        {terminal.map(t => (
+                            <div className="col-2" key={t.code}>
                                 <input type="checkbox" className="mx-1" onChange={this.handleCheck} checked={payMethod.find(el => el.payType.method ===m.code && el.payType.type === t.code).checked} value={m.code + " " + t.code} />
-                                {m.name + t.name}
+                                <span style={payMethod.find(el => el.payType.method ===m.code && el.payType.type === t.code).checked?{backgroundColor:"yellow"}:null}>
+                                    {m.name + t.name}
+                                </span>
+                                
                             </div>
                         ))}
 
                     </div>
                 ))}
 
-                <div className="row my-2">
-                    <WhiteArea hdInput={this.hdInput} />
-
-                    <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                        <ClearBtn tag="清空" clear={this.clear} />
-                        <UpdateBtn tag="新增支付" />
+                <div className="row my-2 align-items-end">
+                    <div className="col-6 mr-5">
+                    <WhiteArea hdInput={this.hdInput} name="white"/>
                     </div>
+                    
+                    <ClearBtn tag="清空" clear={this.clear} />
+                    <UpdateBtn tag="新增支付" update={this.props.addZhFuToList} result={addpaystr}/>
+                    
+                    
 
                 </div>
 
